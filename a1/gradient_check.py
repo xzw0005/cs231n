@@ -10,7 +10,7 @@ def eval_numerical_gradient(f, x, verbose=True, h=1e-5):
 #     fx = f(x)
     grad = np.zeros_like(x)
     # iterate over all indices in x
-    it = np.nditer(x, flags=['multi_index'], op_flags=['rw'])
+    it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
     while not it.finished:
         ix = it.multi_index
         old_val = x[ix]
@@ -27,7 +27,7 @@ def eval_numerical_gradient(f, x, verbose=True, h=1e-5):
 
 def eval_numerical_gradient_array(f, x, df, h=1e-5):
     grad = np.zeros_like(x)
-    it = np.nditer(x, flags=['multi_index'], op_flags='rw')
+    it = np.nditer(x, flags=['multi_index'], op_flags='readwrite')
     while not it.finished:
         ix = it.multi_index
         oldval = x[ix]
