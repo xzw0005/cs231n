@@ -9,7 +9,7 @@ import numpy as np
 from data_utils import load_CIFAR10
 import matplotlib.pyplot as plt 
 
-cifar10_dir = './datasets/cifar-10-batches-py'
+cifar10_dir = '../datasets/cifar-10-batches-py'
 X_train, y_train, X_test, y_test = load_CIFAR10(cifar10_dir)
 print('Training data shape: ', X_train.shape)
 print('Training labels shape: ', y_train.shape)

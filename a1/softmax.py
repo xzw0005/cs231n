@@ -11,7 +11,7 @@ from a1.data_utils import load_CIFAR10
 from a1.classifiers.linear_classifier import Softmax
 
 def get_CIFAR10_data(num_training=49000, num_validation=1000, num_test=1000, num_dev=500):
-    cifar10_dir = './datasets/cifar-10-batches-py'
+    cifar10_dir = '../datasets/cifar-10-batches-py'
     X_train, y_train, X_test, y_test = load_CIFAR10(cifar10_dir)
     # Sub-sample
     mask = list(range(num_training, num_training+num_validation))

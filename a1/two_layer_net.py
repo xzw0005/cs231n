@@ -60,7 +60,7 @@ print('Final training loss: ', stats['loss_history'][-1])
 
 from a1.data_utils import load_CIFAR10
 def get_CIFAR10_data(num_training=49000, num_validation=1000, num_test=1000, num_dev=500):
-    cifar10_dir = './datasets/cifar-10-batches-py'
+    cifar10_dir = '../datasets/cifar-10-batches-py'
     X_train, y_train, X_test, y_test = load_CIFAR10(cifar10_dir)
     # Subsample the data
     mask = list(range(num_training, num_training + num_validation))

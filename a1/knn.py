@@ -33,12 +33,7 @@ def load_CIFAR_batch(fname):
         Y = np.array(Y)
         return X, Y
     
-cifar10_dir = './datasets/cifar-10-batches-py'
-try:
-    del X_train, y_train 
-    del X_test, y_test 
-except:
-    pass 
+cifar10_dir = '../datasets/cifar-10-batches-py' 
 X_train, y_train, X_test, y_test = load_CIFAR10(cifar10_dir)
 print('Training data shape: ', X_train.shape)
 print('Training labels shape: ', y_train.shape)
@@ -73,7 +68,7 @@ X_test = np.reshape(X_test, (X_test.shape[0], -1))
 y_test = y_test[mask]    
 print(X_train.shape, X_test.shape)
 
-from classifiers import KNearestNeighbor
+from a1.classifiers import KNearestNeighbor
 import time 
 knn = KNearestNeighbor.KNearestNeighbor()
 knn.train(X_train, y_train)
