@@ -105,8 +105,49 @@ def softmax_loss(yhat, y):
     dout /= N 
     return loss, dout
 
-
-
+def conv_forward_naive(x, w, b, conv_param):
+    """
+    x: (N, C, H, W),   w: (F, C, Hf, Wf),   b: (F,)
+    conv_param:  'stride', 'pad'
+    out: (N, F, Ho, Wo),  cache: (x, w, b, conv_param)
+    """
+    stride, pad = conv_param['stride'], conv_param['pad']
+    cache = (x, w, b, conv_param)
+    N, C, H, W = x.shape 
+    F, C, Hf, Wf = w.shape
+    Ho = 1 + (H + 2 * pad - Hf) // stride 
+    Wo = 1 + (W + 2 * pad - Wf) // stride
+    out = np.zeros((N, F, C, Ho, Wo))
+#     print(out.shape)
+#     paddings = [(0,0),(0,0),(1,1),(1,1)]
+#     x = np.pad(x, paddings, 'constant')  # (N, C, H+2p, W+2p)
+    for m in range(N):
+        for l in range(F):
+            for k in range(C):
+                xnc = np.pad(x[m, k, :, :], 1, 'constant')      # (H+2p, W+2p)
+                filter_k = w[l, k, :, :]    # (HF, WF)
+#                 print('filter: ', filter_k.shape)
+                for j in range(0, H+2*pad, stride):
+                    for i in range(0, W+2*pad, stride):
+                        jj, ii = j + Hf, i + Wf
+                        if jj > H+2*pad or ii > W+2*pad:
+                            continue
+                        xmk = xnc[i:(i+Hf), j:(j+Wf)]
+#                         print(xij.shape)
+#                         onc.append(np.sum(np.dot(xmk, filter_k)))
+                        out[m, l, k, j//stride, i//stride] = np.sum(np.dot(xmk, filter_k))
+    print(out.shape)
+    out = out.sum(axis=2)
+    out += b.reshape(1, F, 1, 1)
+    return out, cache
+    
+x_shape = (2, 3, 4, 4)
+w_shape = (3, 3, 4, 4)
+x = np.linspace(-0.1, 0.5, num=np.prod(x_shape)).reshape(x_shape)
+w = np.linspace(-0.2, 0.3, num=np.prod(w_shape)).reshape(w_shape)
+b = np.linspace(-0.1, 0.2, num=3)
+conv_param = {'stride': 2, 'pad': 1}
+conv_forward_naive(x, w, b, conv_param)
 
 
 
