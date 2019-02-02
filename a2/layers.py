@@ -119,35 +119,82 @@ def conv_forward_naive(x, w, b, conv_param):
     Wo = 1 + (W + 2 * pad - Wf) // stride
     out = np.zeros((N, F, C, Ho, Wo))
 #     print(out.shape)
-#     paddings = [(0,0),(0,0),(1,1),(1,1)]
-#     x = np.pad(x, paddings, 'constant')  # (N, C, H+2p, W+2p)
+    paddings = [(0,0),(0,0),(pad, pad),(pad, pad)]
+    xp = np.pad(x, paddings, 'constant')  # (N, C, H+2p, W+2p)
     for m in range(N):
         for l in range(F):
             for k in range(C):
-                xnc = np.pad(x[m, k, :, :], 1, 'constant')      # (H+2p, W+2p)
                 filter_k = w[l, k, :, :]    # (HF, WF)
-#                 print('filter: ', filter_k.shape)
-                for j in range(0, H+2*pad, stride):
-                    for i in range(0, W+2*pad, stride):
-                        jj, ii = j + Hf, i + Wf
-                        if jj > H+2*pad or ii > W+2*pad:
-                            continue
-                        xmk = xnc[i:(i+Hf), j:(j+Wf)]
-#                         print(xij.shape)
-#                         onc.append(np.sum(np.dot(xmk, filter_k)))
-                        out[m, l, k, j//stride, i//stride] = np.sum(np.dot(xmk, filter_k))
-    print(out.shape)
+                for j in range(Ho):
+                    for i in range(Wo):
+                        xf = xp[m, k, j*stride:(j*stride+Hf), i*stride:(i*stride+Wf)]
+                        out[m, l, k, j, i] = np.sum(xf * filter_k)
     out = out.sum(axis=2)
     out += b.reshape(1, F, 1, 1)
+    cache = (x, w, b, conv_param)
     return out, cache
     
-x_shape = (2, 3, 4, 4)
-w_shape = (3, 3, 4, 4)
-x = np.linspace(-0.1, 0.5, num=np.prod(x_shape)).reshape(x_shape)
-w = np.linspace(-0.2, 0.3, num=np.prod(w_shape)).reshape(w_shape)
-b = np.linspace(-0.1, 0.2, num=3)
-conv_param = {'stride': 2, 'pad': 1}
-conv_forward_naive(x, w, b, conv_param)
+def conv_backward_naive(dout, cache):
+    x, w, b, conv_param = cache
+    stride, pad = conv_param['stride'], conv_param['pad']
+    db = np.sum(dout, axis=(0, 2, 3))
+    N, C, H, W = x.shape 
+    F, C, Hf, Wf = w.shape 
+    N, C, Hout, Wout = dout.shape 
+    paddings = [(0, 0), (0, 0), (pad, pad), (pad, pad)]
+    xp = np.pad(x, paddings, 'constant')    # (N, C, H+2p, W+2p)
+    dx = np.zeros(xp.shape)
+    dw = np.zeros(w.shape)
+    for m in range(N):
+        for l in range(F):
+            for j in range(Hout):
+                for i in range(Wout):
+                    xf = xp[m, :, stride*j:(stride*j+Hf), stride*i:(stride*i+Wf)]
+                    dw[l, :, :, :] += dout[m, l, j, i] * xf 
+                    dx[m, :, stride*j:(stride*j+Hf), stride*i:(stride*i+Wf)] += dout[m, l, j, i] * w[l, :, :, :]
+    dx = dx[:, :, pad:-pad, pad:-pad]
+    return dx, dw, db
+    
+def max_pool_forward_naive(x, pool_param):
+    ph = pool_param['pool_height']
+    pw = pool_param['width']
+    s = pool_param['stride']
+    N, C, H, W = x.shape 
+    Hout = 1 + (H - ph) // s 
+    Wout = 1 + (W - pw) // s 
+    out = np.zeros((N, C, Hout, Wout))
+    for i in range(Hout):
+        for j in range(Wout):
+            xpool = x[:, :, i*s:(i*s+ph), j*s:(j*s+pw)]
+            out[:, :, i, j] = np.max(xpool, axis=(2, 3))
+    cache = (x, pool_param)
+    return out, cache 
+
+def max_pool_backward_naive(dout, cache):
+    x, pool_param = cache 
+    ph = pool_param['height']
+    pw = pool_param['width']
+    s = pool_param['stride']
+    N, C, Hout, Wout = dout.shape 
+    dx = np.zeros_like(x)
+    for n in range(N):
+        for c in range(C):
+            for i in range(Hout):
+                for j in range(Wout):
+                    x_pool = x[n, c, i*s:(i*s+ph), j*s:(j*s+pw)]
+                    o_pool = np.max(x_pool, keepdims=True)
+                    dx_pool = np.zeros_like(x_pool)
+                    dx_pool[x_pool == o_pool] = dout[n, c, i, j]
+                    dx[n, c, i*s:(i*s+ph), j*s:(j*s+pw)] += dx_pool
+    return dx
+    
+# x_shape = (2, 3, 4, 4)
+# w_shape = (3, 3, 4, 4)
+# x = np.linspace(-0.1, 0.5, num=np.prod(x_shape)).reshape(x_shape)
+# w = np.linspace(-0.2, 0.3, num=np.prod(w_shape)).reshape(w_shape)
+# b = np.linspace(-0.1, 0.2, num=3)
+# conv_param = {'stride': 2, 'pad': 1}
+# conv_forward_naive(x, w, b, conv_param)
 
 
 
