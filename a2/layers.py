@@ -69,6 +69,44 @@ def batchnorm_backward(dout, cache):
     dbeta = np.sum(dout, axis=0)
     return dx, dgamma, dbeta
 
+def layernorm_backward(dout, cache):
+    """
+    Backward pass for layer normalization.
+
+    For this implementation, you can heavily rely on the work you've done already
+    for batch normalization.
+
+    Inputs:
+    - dout: Upstream derivatives, of shape (N, D)
+    - cache: Variable of intermediates from layernorm_forward.
+
+    Returns a tuple of:
+    - dx: Gradient with respect to inputs x, of shape (N, D)
+    - dgamma: Gradient with respect to scale parameter gamma, of shape (D,)
+    - dbeta: Gradient with respect to shift parameter beta, of shape (D,)
+    """
+#     dx, dgamma, dbeta = None, None, None
+    ###########################################################################
+    # TODO: Implement the backward pass for layer norm.                       #
+    #                                                                         #
+    # HINT: this can be done by slightly modifying your training-time         #
+    # implementation of batch normalization. The hints to the forward pass    #
+    # still apply!                                                            #
+    ###########################################################################
+#     pass
+    x, gamma, mu, sigma = cache
+    N, D = x.shape
+    dxhat = dout * gamma 
+    dvar = np.sum(-0.5 * dxhat * (x-mu) * sigma**(-3), axis=1, keepdims=True)
+    dmu = np.sum(-dxhat * sigma**(-1), axis=1, keepdims=True) + dvar * np.sum(-2*(x-mu)/D, axis=1, keepdims=True)
+    dx = dxhat * sigma**(-1) + 2. / D * dvar * (x-mu) + dmu / D 
+    dgamma = np.sum(dout * (x-mu)/sigma, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return dx, dgamma, dbeta
+
 def dropout_forward(x, dropout_param):
     p, mode = dropout_param['p'], dropout_param['mode']
     mask = None 
